@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Мониторинг Температуры</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .temperature-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .temperature-value {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .temperature-label {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 15px;
+        }
+
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+
+        .status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+
+        .status.waiting {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌡️ IoT Мониторинг</h1>
+        <p class="subtitle">Температура в реальном времени</p>
+
+        <div class="temperature-display">
+            <div class="temperature-label">Текущая температура</div>
+            <div class="temperature-value" id="temperature">
+                <span class="loading">Загрузка...</span>
+            </div>
+        </div>
+
+        <div class="timestamp" id="timestamp">Ожидание данных...</div>
+        <div class="status waiting" id="status">⏳ Ожидание подключения</div>
+    </div>
+
+    <script>
+        // Функция для получения данных температуры
+        async function fetchTemperature() {
+            try {
+                const response = await fetch('/api/temperature');
+                const data = await response.json();
+
+                const tempElement = document.getElementById('temperature');
+                const timestampElement = document.getElementById('timestamp');
+                const statusElement = document.getElementById('status');
+
+                if (data.value !== null) {
+                    tempElement.innerHTML = `${data.value}°C`;
+                    timestampElement.textContent = `Обновлено: ${data.timestamp}`;
+                    statusElement.textContent = '✅ Подключено';
+                    statusElement.className = 'status connected';
+                } else {
+                    tempElement.innerHTML = '<span class="loading">Нет данных</span>';
+                    timestampElement.textContent = 'Данные не получены';
+                    statusElement.textContent = '⏳ Ожидание данных';
+                    statusElement.className = 'status waiting';
+                }
+            } catch (error) {
+                console.error('Ошибка получения данных:', error);
+                document.getElementById('status').textContent = '❌ Ошибка подключения';
+                document.getElementById('status').className = 'status disconnected';
+            }
+        }
+
+        // Обновляем данные каждые 2 секунды
+        fetchTemperature();
+        setInterval(fetchTemperature, 2000);
+    </script>
+</body>
+</html>
+
